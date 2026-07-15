@@ -9,11 +9,22 @@ fi
 # <<< ghost-complete initialize <<<
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
 
-if command -v tmux >/dev/null 2>&1; then
-  if [ -z "$TMUX" ]; then
-    tmux attach -t main || tmux new -s main
-  fi
-fi
+#if command -v tmux >/dev/null 2>&1; then
+#  if [ -z "$TMUX" ]; then
+#    tmux attach -t main || tmux new -s main
+#  fi
+#fi
+# Secrets are stored in the macOS Keychain, not in this file.
+# Add a new one with: security add-generic-password -U -a "$USER" -s NAME -w
+keychain_secret() { security find-generic-password -a "$USER" -s "$1" -w 2>/dev/null; }
+export ANTHROPIC_API_KEY="$(keychain_secret ANTHROPIC_API_KEY)"
+export AWS_ACCESS_KEY_ID="$(keychain_secret AWS_ACCESS_KEY_ID)"
+export AWS_SECRET_ACCESS_KEY="$(keychain_secret AWS_SECRET_ACCESS_KEY)"
+
+# Misc Alias
+alias cc="claude"
+alias code="/Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code"
+alias dbReset="pipenv run alembic downgrade base && pipenv run alembic upgrade head"
 
 # General Terminal
 alias ls="ls -ltraG --color"
