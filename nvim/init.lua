@@ -15,7 +15,7 @@ do
   vim.loader.enable()
 
   -- Set to true if you have a Nerd Font installed and selected in the terminal
-  vim.g.have_nerd_font = false
+  vim.g.have_nerd_font = true
 
   -- [[ Setting options ]]
   --  See `:help vim.o`
@@ -96,6 +96,18 @@ end
 do
   -- [[ Basic Keymaps ]]
   --  See `:help vim.keymap.set()`
+-- GIT Controls:
+
+vim.keymap.set(
+  "n",
+  "<leader>gl",
+  "<cmd>Gitsigns blame_line full=true<CR>",
+  { desc = "Git blame line" }
+)
+
+vim.keymap.set("n", "<leader>hr", function()
+  require("gitsigns").reset_hunk()
+end, { desc = "Reset Git hunk" })
 
   -- Clear highlights on search when pressing <Esc> in normal mode
   --  See `:help hlsearch`
@@ -254,6 +266,7 @@ require('lazy').setup({
         { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
+        { '<leader>g', group = '[G]it (Neogit)' },
         { 'gr', group = 'LSP Actions', mode = { 'n' } },
       },
     },
@@ -603,6 +616,7 @@ require('lazy').setup({
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
+        jdtls = {}, -- Java (Eclipse JDT language server)
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
@@ -877,6 +891,7 @@ require('lazy').setup({
       })
     end,
   },
+
 
   -- ----------------------------------------------------------
   -- SECTION 10: OPTIONAL EXAMPLES / NEXT STEPS
