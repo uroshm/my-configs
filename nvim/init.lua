@@ -113,8 +113,20 @@ end, { desc = "Reset Git hunk" })
   --  See `:help hlsearch`
   vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
   vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>')
+  vim.keymap.set('n', '<leader>x', function() Snacks.bufdelete() end, { desc = 'Close current buffer' })
+  vim.keymap.set('n', '<leader>X', function() Snacks.bufdelete.other() end, { desc = 'Close other buffers' })
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
+
+  -- Ruff appends its fix suggestion to the message as `\nhelp: <fix>`, which makes
+  -- inline virtual text wrap onto several lines. Hide it inline by default; the full
+  -- message (help included) is still shown in the float and in `<leader>q`.
+  local show_diagnostic_help = false
+  local function format_diagnostic(diagnostic)
+    if show_diagnostic_help then return diagnostic.message end
+    return (diagnostic.message:gsub('\n%s*help:.*', ''))
+  end
+
   vim.diagnostic.config {
     update_in_insert = false,
     severity_sort = true,
@@ -122,7 +134,7 @@ end, { desc = "Reset Git hunk" })
     underline = { severity = { min = vim.diagnostic.severity.WARN } },
 
     -- Can switch between these as you prefer
-    virtual_text = true, -- Text shows up at the end of the line
+    virtual_text = { format = format_diagnostic }, -- Text shows up at the end of the line
     virtual_lines = false, -- Text shows up underneath the line, with virtual lines
 
     -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
@@ -138,6 +150,13 @@ end, { desc = "Reset Git hunk" })
   }
 
   vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+  vim.keymap.set('n', '<leader>td', function()
+    show_diagnostic_help = not show_diagnostic_help
+    -- Re-apply the config so existing virtual text is re-rendered
+    vim.diagnostic.config { virtual_text = { format = format_diagnostic } }
+    vim.notify('Diagnostic fix hints ' .. (show_diagnostic_help and 'shown' or 'hidden') .. ' inline')
+  end, { desc = '[T]oggle inline [D]iagnostic fix hints' })
 
   -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
   -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -286,7 +305,7 @@ require('lazy').setup({
       require('rose-pine').setup {
         styles = {
           italic = false, -- Disable italics
-          transparent = true, -- Keep the terminal background (incl. nvim-tree) transparent
+          transparency = true, -- Keep the terminal background (incl. nvim-tree) transparent
         },
       }
 
@@ -614,9 +633,14 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
         -- rust_analyzer = {},
         jdtls = {}, -- Java (Eclipse JDT language server)
+        pyright = {}, -- Python (completion, hover, go-to-definition, type checking)
+        -- Python linting and code actions. Formatting is handled by conform (`ruff_format`).
+        ruff = {
+          -- Let pyright own hover; ruff's hover is only rule documentation and would win by chance.
+          on_attach = function(client) client.server_capabilities.hoverProvider = false end,
+        },
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
@@ -706,7 +730,7 @@ require('lazy').setup({
         -- You can specify filetypes to autoformat on save here:
         local enabled_filetypes = {
           -- lua = true,
-          -- python = true,
+          python = true,
         }
         if enabled_filetypes[vim.bo[bufnr].filetype] then
           return { timeout_ms = 500 }
@@ -721,7 +745,8 @@ require('lazy').setup({
       formatters_by_ft = {
         -- rust = { 'rustfmt' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        -- Add 'ruff_fix' at the front to also apply autofixable lint rules on format.
+        python = { 'ruff_organize_imports', 'ruff_format' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },

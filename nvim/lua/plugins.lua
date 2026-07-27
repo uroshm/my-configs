@@ -18,14 +18,39 @@ return {
       enabled = true,
       doc = {
         -- This displays images inline inside markdown files
-        inline = true, 
+        inline = true,
         -- Only renders the image when your cursor is near it
-        float = true,  
+        float = true,
         max_width = 80,
         max_height = 40,
       },
     },
+    -- Needed so image conversion failures actually surface instead of
+    -- silently spinning forever.
+    notifier = { enabled = true },
   },
+  config = function(_, opts)
+    require("snacks").setup(opts)
+
+    -- tmux doesn't report pixel dimensions, so the TIOCGWINSZ ioctl in
+    -- snacks/image/terminal.lua returns xpixel/ypixel = 0. Its guard only
+    -- rejects col/row == 0, so those zeros overwrite the built-in 9x18
+    -- fallback. Cell size 0 then makes pixels_to_cells() divide by zero
+    -- (inf), fit() compute inf/inf (nan), and the image never renders --
+    -- it just spins with no error. Restore a sane fallback.
+    local terminal = require("snacks.image.terminal")
+    local size = terminal.size
+    terminal.size = function()
+      local s = size()
+      if not s.cell_width or s.cell_width == 0 or s.cell_height == 0 then
+        local cw, ch = 9, 18
+        s.cell_width, s.cell_height = cw, ch
+        s.width, s.height = s.columns * cw, s.rows * ch
+        s.scale = math.max(1, cw / 8)
+      end
+      return s
+    end
+  end,
 },
 {
   "NeogitOrg/neogit",

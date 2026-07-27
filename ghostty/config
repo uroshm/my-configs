@@ -1,6 +1,6 @@
 # Tokyo Night
 font-family = JetBrainsMono Nerd Font
 cursor-style = block
-background-opacity = 0.85
+background-opacity = 0.9
 command = /bin/zsh
 macos-titlebar-style = hidden

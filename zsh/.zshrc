@@ -99,3 +99,11 @@ export PATH="$HOME/.local/bin:$PATH"
 # !! Contents within this block are managed by 'ghost-complete install' !!
 source '/Users/uros/.config/ghost-complete/shell/ghost-complete.zsh'
 # <<< ghost-complete shell integration <<<
+
+# pnpm
+export PNPM_HOME="/Users/uros/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end
