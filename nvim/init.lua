@@ -315,6 +315,19 @@ require('lazy').setup({
     end,
   },
 
+  {
+    "folke/snacks.nvim",
+    priority = 1000,
+    lazy = false,
+    opts = {
+      -- This activates the high-performance inline image rendering engine
+      image = {
+        enabled = true,
+        force_max_width = 80,
+      },
+    },
+},
+
   -- Highlight todo, notes, etc in comments
   {
     'folke/todo-comments.nvim',

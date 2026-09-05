@@ -5,11 +5,43 @@ return {
       "nvim-tree/nvim-web-devicons",
     },
     config = function()
+      local api = require("nvim-tree.api")
+
+      local function dir_of(node)
+        if not node then return nil end
+        if node.type == "directory" then return node.absolute_path end
+        return vim.fn.fnamemodify(node.absolute_path, ":h")
+      end
+
       require("nvim-tree").setup({
         update_focused_file = {
           enable = true,
           update_root = false,
         },
+        on_attach = function(bufnr)
+          api.config.mappings.default_on_attach(bufnr) -- keep all defaults
+
+          local function opts(desc)
+            return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+          end
+
+          -- terminal inside nvim, in a split
+          vim.keymap.set("n", "<leader>t", function()
+            local dir = dir_of(api.tree.get_node_under_cursor())
+            if not dir then return end
+            vim.cmd("botright split | resize 15")
+            vim.cmd("lcd " .. vim.fn.fnameescape(dir))
+            vim.cmd("terminal")
+            vim.cmd("startinsert")
+          end, opts("terminal split here"))
+
+          -- new Ghostty window at that directory
+          vim.keymap.set("n", "<leader>T", function()
+            local dir = dir_of(api.tree.get_node_under_cursor())
+            if not dir then return end
+            vim.system({ "open", "-na", "Ghostty", "--args", "--working-directory=" .. dir })
+          end, opts("Ghostty window here"))
+        end,
       })
     end,
   },
@@ -17,10 +49,23 @@ return {
   "folke/snacks.nvim",
   priority = 1000,
   lazy = false,
+  init = function()
+    if
+      vim.env.TERM_PROGRAM == "ghostty"
+      or vim.env.GHOSTTY_BIN_DIR
+      or vim.env.GHOSTTY_RESOURCES_DIR
+      or vim.env.__CFBundleIdentifier == "com.mitchellh.ghostty"
+    then
+      vim.env.SNACKS_GHOSTTY = "true"
+    end
+  end,
   opts = {
     -- Enable the image module
     image = {
       enabled = true,
+      convert = {
+        notify = true,
+      },
       doc = {
         -- This displays images inline inside markdown files
         inline = true,
@@ -55,6 +100,19 @@ return {
       end
       return s
     end
+
+    vim.api.nvim_create_user_command("SnacksImageDebug", function()
+      vim.print({
+        supports_terminal = require("snacks.image").supports_terminal(),
+        env = terminal.env(),
+        terminal = terminal._terminal,
+        size = terminal.size(),
+        TERM = vim.env.TERM,
+        TERM_PROGRAM = vim.env.TERM_PROGRAM,
+        TMUX = vim.env.TMUX,
+        SNACKS_GHOSTTY = vim.env.SNACKS_GHOSTTY,
+      })
+    end, {})
   end,
 },
 {
