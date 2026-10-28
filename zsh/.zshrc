@@ -23,6 +23,7 @@ export AWS_SECRET_ACCESS_KEY="$(keychain_secret AWS_SECRET_ACCESS_KEY)"
 
 # Misc Alias
 alias cc="claude"
+alias co="codex"
 alias code="/Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code"
 alias dbReset="pipenv run alembic downgrade base && pipenv run alembic upgrade head"
 
