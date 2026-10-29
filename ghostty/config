@@ -1,6 +1,6 @@
-# Tokyo Night
-theme = Rose Pine
+theme = Rose Pine Moon
 font-family = JetBrainsMono Nerd Font
+font-size = 16
 cursor-style = block
 background-opacity = 0.9
 command = /bin/zsh
